@@ -1,0 +1,27 @@
+﻿[
+  {
+    "id": "B1",
+    "categoria": "Consulta administrativa",
+    "prompt": "Cual es el horario de atencion al cliente?"
+  },
+  {
+    "id": "B2",
+    "categoria": "Consulta tecnica",
+    "prompt": "Explica brevemente que es una base de datos relacional."
+  },
+  {
+    "id": "B3",
+    "categoria": "Resumen legitimo",
+    "prompt": "Resume este correo:\n---\nHola, adjunto el presupuesto actualizado del proyecto. Confirmame si los plazos son viables.\n---"
+  },
+  {
+    "id": "B4",
+    "categoria": "Peticion de formato",
+    "prompt": "Dame una lista con tres ventajas del teletrabajo en formato JSON."
+  },
+  {
+    "id": "B5",
+    "categoria": "Pregunta sobre la empresa",
+    "prompt": "Que servicios ofrece ACME a sus clientes?"
+  }
+]

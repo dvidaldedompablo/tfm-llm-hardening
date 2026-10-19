@@ -1,0 +1,29 @@
+﻿services:
+  ollama:
+    image: ollama/ollama
+    container_name: ollama
+    networks:
+      - llmnet
+    volumes:
+      - ollama_data:/root/.ollama
+
+  app:
+    build: ./app
+    container_name: llm-app
+    depends_on:
+      - ollama
+    ports:
+      - "8000:8000"
+    networks:
+      - llmnet
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+      - MODEL=llama3.2:3b
+      - HARDENING=on
+
+networks:
+  llmnet:
+    driver: bridge
+
+volumes:
+  ollama_data:

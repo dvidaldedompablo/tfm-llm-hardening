@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLM Securizado | Asistente</title>
+<style>
+  :root{
+    --bg1:#0a0f24; --bg2:#0f1733; --panel:rgba(255,255,255,.04);
+    --border:rgba(255,255,255,.08); --text:#e8eefc; --muted:#93a6cc;
+    --accent:#3b82f6; --accent2:#22d3ee; --user:#2563eb; --danger:#ef4444; --ok:#22c55e;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--text); height:100vh; overflow:hidden;
+    background:radial-gradient(1200px 600px at 10% -10%,#1e2a5a 0,transparent 50%),
+               radial-gradient(1000px 500px at 110% 10%,#0b3b46 0,transparent 45%),
+               linear-gradient(160deg,var(--bg1),var(--bg2));
+    display:flex; justify-content:center; align-items:center; padding:16px;
+  }
+  .app{
+    width:100%; max-width:860px; height:100%; max-height:900px; display:flex; flex-direction:column;
+    background:var(--panel); border:1px solid var(--border); border-radius:20px; overflow:hidden;
+    backdrop-filter:blur(14px); box-shadow:0 30px 80px rgba(0,0,0,.45);
+  }
+  header{
+    display:flex; align-items:center; gap:14px; padding:18px 22px;
+    border-bottom:1px solid var(--border);
+    background:linear-gradient(90deg,rgba(59,130,246,.16),rgba(34,211,238,.06));
+  }
+  .logo{
+    width:44px; height:44px; border-radius:13px; flex:0 0 auto;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(59,130,246,.5);
+  }
+  .logo svg{width:24px;height:24px;fill:#fff}
+  .titles h1{font-size:18px;letter-spacing:.2px}
+  .titles p{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .pill{
+    margin-left:auto; font-size:12px; font-weight:600; padding:7px 13px; border-radius:999px;
+    border:1px solid var(--border); color:var(--muted); white-space:nowrap;
+  }
+  .pill.on{color:#bbf7d0; border-color:rgba(34,197,94,.4); background:rgba(34,197,94,.12)}
+  .pill.off{color:#fde68a; border-color:rgba(245,200,66,.35); background:rgba(245,200,66,.10)}
+  .chat{flex:1; overflow-y:auto; padding:24px; display:flex; flex-direction:column; gap:16px}
+  .row{display:flex; gap:11px; max-width:86%}
+  .row.user{align-self:flex-end; flex-direction:row-reverse}
+  .av{
+    width:34px;height:34px;border-radius:10px;flex:0 0 auto;display:flex;align-items:center;
+    justify-content:center;font-size:13px;font-weight:700
+  }
+  .av.bot{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+  .av.user{background:#1e2a52;color:#cdd9f5;border:1px solid var(--border)}
+  .bubble{
+    padding:13px 16px;border-radius:15px;line-height:1.5;font-size:14.5px;white-space:pre-wrap;
+    word-wrap:break-word
+  }
+  .bot .bubble{background:#11192f;border:1px solid var(--border);border-top-left-radius:5px}
+  .user .bubble{background:linear-gradient(135deg,var(--user),#1d4ed8);border-top-right-radius:5px;color:#fff}
+  .bubble.blocked{border-left:3px solid var(--danger)}
+  .tag{display:inline-block;margin-top:8px;font-size:11.5px;font-weight:600;color:#fca5a5;
+       background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);padding:3px 9px;border-radius:8px}
+  .dots span{display:inline-block;width:7px;height:7px;margin:0 2px;border-radius:50%;
+       background:var(--muted);animation:b 1.2s infinite}
+  .dots span:nth-child(2){animation-delay:.2s}.dots span:nth-child(3){animation-delay:.4s}
+  @keyframes b{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-4px)}}
+  .composer{display:flex;gap:10px;padding:16px 18px;border-top:1px solid var(--border);
+       background:rgba(255,255,255,.02)}
+  textarea{
+    flex:1;resize:none;max-height:130px;border:1px solid var(--border);background:#0c1430;color:var(--text);
+    border-radius:13px;padding:13px 15px;font:inherit;font-size:14.5px;outline:none
+  }
+  textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.18)}
+  .send{
+    flex:0 0 auto;width:50px;border:0;border-radius:13px;cursor:pointer;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center
+  }
+  .send:disabled{opacity:.5;cursor:not-allowed}
+  .send svg{width:21px;height:21px;fill:#fff}
+  .hint{text-align:center;font-size:11px;color:var(--muted);padding:0 0 12px}
+  @media (max-width:640px){.row{max-width:94%}.chat{padding:16px}}
+</style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="logo"><svg viewBox="0 0 24 24"><path d="M12 1l9 4v6c0 5-3.8 9.4-9 11-5.2-1.6-9-6-9-11V5l9-4zm0 6a3 3 0 00-3 3v1H8v6h8v-6h-1v-1a3 3 0 00-3-3zm0 2a1 1 0 011 1v1h-2v-1a1 1 0 011-1z"/></svg></div>
+      <div class="titles"><h1>LLM Securizado</h1><p>Asistente corporativo en entorno local</p></div>
+      <div id="pill" class="pill">Conectando...</div>
+    </header>
+    <div id="chat" class="chat"></div>
+    <div class="composer">
+      <textarea id="input" rows="1" placeholder="Escribe tu pregunta..."></textarea>
+      <button id="send" class="send" title="Enviar"><svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg></button>
+    </div>
+    <div class="hint">Pulsa Enter para enviar - Shift+Enter para salto de linea</div>
+  </div>
+<script>
+  const chat = document.getElementById('chat');
+  const input = document.getElementById('input');
+  const sendBtn = document.getElementById('send');
+  const pill = document.getElementById('pill');
+
+  function bubble(role, text, blockedBy){
+    const row = document.createElement('div'); row.className = 'row ' + role;
+    const av = document.createElement('div'); av.className = 'av ' + role;
+    av.textContent = role === 'user' ? 'Tu' : 'AI';
+    const b = document.createElement('div'); b.className = 'bubble' + (blockedBy ? ' blocked' : '');
+    b.textContent = text;
+    if(blockedBy){ const t=document.createElement('div'); t.className='tag'; t.textContent='Bloqueado por: '+blockedBy; b.appendChild(document.createElement('br')); b.appendChild(t);}
+    row.appendChild(av); row.appendChild(b); chat.appendChild(row); chat.scrollTop = chat.scrollHeight;
+    return b;
+  }
+  function typing(){
+    const row=document.createElement('div'); row.className='row bot'; row.id='typing';
+    const av=document.createElement('div'); av.className='av bot'; av.textContent='AI';
+    const b=document.createElement('div'); b.className='bubble dots';
+    b.innerHTML='<span></span><span></span><span></span>';
+    row.appendChild(av); row.appendChild(b); chat.appendChild(row); chat.scrollTop=chat.scrollHeight;
+  }
+  function stopTyping(){ const t=document.getElementById('typing'); if(t) t.remove(); }
+
+  async function loadHealth(){
+    try{
+      const r = await fetch('/health'); const d = await r.json();
+      if(d.hardening){ pill.textContent='Defensas activas - '+d.model; pill.className='pill on'; }
+      else { pill.textContent='Sin defensas - '+d.model; pill.className='pill off'; }
+    }catch(e){ pill.textContent='Sin conexion'; pill.className='pill off'; }
+  }
+
+  async function send(){
+    const text = input.value.trim(); if(!text) return;
+    bubble('user', text); input.value=''; input.style.height='auto';
+    sendBtn.disabled=true; typing();
+    try{
+      const r = await fetch('/chat', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({prompt:text})});
+      const d = await r.json(); stopTyping();
+      bubble('bot', d.response || JSON.stringify(d), d.blocked_by);
+    }catch(e){ stopTyping(); bubble('bot','Error de conexion con el servidor.'); }
+    sendBtn.disabled=false; input.focus();
+  }
+
+  sendBtn.addEventListener('click', send);
+  input.addEventListener('keydown', e => { if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); send(); }});
+  input.addEventListener('input', () => { input.style.height='auto'; input.style.height=Math.min(input.scrollHeight,130)+'px'; });
+  bubble('bot','Hola, soy tu asistente corporativo en entorno local. Hazme una pregunta.');
+  loadHealth();
+</script>
+</body>
+</html>
